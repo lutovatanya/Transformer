@@ -41,8 +41,9 @@ class TransformerEncoderLayer(nn.Module):
             src = self.norm2(src)
             return src
 
-encoder_layer = nn.TransformerEncoderLayer(d_model=1200, nhead=8)
-src = torch.rand(1000, 1, 1200)
-print(src)
-out = encoder_layer(src)
-print(out)
+    encoder_layer = nn.TransformerEncoderLayer(d_model=512, nhead=8)
+    src = torch.randn(10, 32, 512)
+    print(src)
+    out = encoder_layer(src)
+    print(out)
+    print(out.shape)
