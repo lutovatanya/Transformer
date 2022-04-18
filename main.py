@@ -1,6 +1,6 @@
 import torch
 from torch import nn, Tensor
-from torch.nn import TransformerEncoderLayer
+from torch.nn import TransformerEncoderLayer, TransformerEncoder
 from torch.nn import functional as F
 from torch.nn.modules.activation import MultiheadAttention
 from torch.nn.modules.dropout import Dropout
@@ -10,6 +10,8 @@ from typing import Optional
 import math
 from torch.nn.init import xavier_uniform_, constant_, xavier_normal_
 from torch.nn.parameter import Parameter
+
+from prettytable import PrettyTable
 
 class PositionalEncoding(nn.Module):
     def __init__(self, d_model: int, dropout: float = 0.1, max_len: int = 5000):
@@ -144,9 +146,26 @@ class MultiheadAttention(nn.Module):
                 key_padding_mask=key_padding_mask, need_weights=need_weights,
                 attn_mask=attn_mask)
 
+def count_parameters(model):
+    table = PrettyTable(["Modules", "Parameters"])
+    total_params = 0
+    for name, parameter in model.named_parameters():
+        if not parameter.requires_grad: continue
+        params = parameter.numel()
+        table.add_row([name, params])
+        total_params += params
+    print(table)
+    print(f"Total Params: {total_params}")
+    return total_params
+
+
 if __name__ == "__main__":
 
+    encoder_par = count_parameters(nn.TransformerEncoderLayer(d_model=1200, nhead=8))
+    print(encoder_par)
+
     encoder_layer = nn.TransformerEncoderLayer(d_model=1200, nhead=8)
+    print(encoder_par)
     src1 = torch.randn(10, 1, 1200)
     print(src1)
     out1 = encoder_layer(src1)
