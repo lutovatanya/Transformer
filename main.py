@@ -56,16 +56,16 @@ class TransformerModel(nn.Module):
 
 if __name__ == "__main__":
 
-    model = TransformerModel(d_model=64, nhead=8, d_hid=132, nlayers=8,
+    model = TransformerModel(d_model=64, nhead=8, d_hid=128, nlayers=8,
                              num_classes=4, n_channels=1, dropout=0.5)
     par = count_parameters(model)
 
-    src = torch.randn(10, 1, 1200)
+    src = torch.randn(4, 1, 1100)
     print(src.size())
     out = model(src)
     print(out.size())
 
-    src2 = torch.randn(10, 1, 1400)
+    src2 = torch.randn(4, 1, 1200)
     print(src2.size())
     out2 = model(src2)
     print(out2.size())
