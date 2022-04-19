@@ -46,10 +46,12 @@ class TransformerModel(nn.Module):
         self.decoder = nn.Linear(d_model, num_classes)
 
     def forward(self, src: Tensor) -> Tensor:
+        src = torch.permute(src, (2, 0, 1))
         src = self.encoder(src) * math.sqrt(self.d_model)
         src = self.pos_encoder(src)
         output = self.transformer_encoder(src)
         output = self.decoder(output)
+        output = torch.permute(output, (1, 2, 0))
         return output
 
 if __name__ == "__main__":
@@ -57,15 +59,12 @@ if __name__ == "__main__":
     model = TransformerModel(d_model=1, nhead=1, d_hid=128, nlayers=4,
                              num_classes=4, n_channels=1, dropout=0.5)
     par = count_parameters(model)
-    src = torch.randn(1200, 10, 1)
+    src = torch.randn(10, 1, 1200)
     print(src.size())
     out = model(src)
     print(out.size())
 
-    src2 = torch.randn(1400, 10, 1)
+    src2 = torch.randn(10, 1, 1400)
     print(src2.size())
     out2 = model(src2)
     print(out2.size())
-
-
-
