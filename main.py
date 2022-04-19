@@ -34,57 +34,38 @@ class PositionalEncoding(nn.Module):
         return self.dropout(x)
 
 class TransformerModel(nn.Module):
-    def __init__(self, ntoken: int, d_model: int, nhead: int, d_hid: int,
-                 nlayers: int, dropout: float = 0.5):
+    def __init__(self, d_model: int, nhead: int, d_hid: int,
+                 nlayers: int, num_classes: int, n_channels: int, dropout: float = 0.5 ):
         super().__init__()
         self.model_type = 'Transformer'
         self.pos_encoder = PositionalEncoding(d_model, dropout)
         encoder_layers = TransformerEncoderLayer(d_model, nhead, d_hid, dropout)
         self.transformer_encoder = TransformerEncoder(encoder_layers, nlayers)
-        self.encoder = nn.Linear(d_model, ntoken)
+        self.encoder = nn.Linear(n_channels, d_model)
         self.d_model = d_model
-
+        self.decoder = nn.Linear(d_model, num_classes)
 
     def forward(self, src: Tensor) -> Tensor:
         src = self.encoder(src) * math.sqrt(self.d_model)
         src = self.pos_encoder(src)
         output = self.transformer_encoder(src)
+        output = self.decoder(output)
         return output
-
-
 
 if __name__ == "__main__":
 
-    #encoder_par = count_parameters(nn.TransformerEncoderLayer(d_model=1, nhead=1, dropout=0.5))
+    par = count_parameters(TransformerModel(d_model=1, nhead=1, d_hid=128, nlayers=4,
+                              num_classes= 4, n_channels= 1, dropout=0.5))
 
-    a = TransformerModel(ntoken=1, d_model=1, nhead=1, d_hid=128, nlayers=1, dropout=0.5)
+    Transformer = TransformerModel(d_model=1, nhead=1, d_hid=128, nlayers=4, num_classes= 4, n_channels= 1, dropout=0.5)
     src = torch.randn(1200, 10, 1)
-    out = a(src)
-    print(out)
+    print(src.size())
+    out = Transformer(src)
     print(out.size())
 
-    """
-
-    encoder_layer = nn.TransformerEncoderLayer(d_model=1, nhead=1, dropout=0.5)
-    src1 = torch.randn(1200, 10, 1)
-    out1 = encoder_layer(src1)
-    print(out1.size())
-
-    m = nn.Linear(1, 4)
-    input = out1
-    output = m(input)
-    print(output.size())
-
-    encoder_layer = nn.TransformerEncoderLayer(d_model=1, nhead=1, d_hid=128, dropout=0.5)
     src2 = torch.randn(1400, 10, 1)
-    out2 = encoder_layer(src2)
+    print(src2.size())
+    out2 = Transformer(src2)
     print(out2.size())
-
-    m2 = nn.Linear(1, 4)
-    input2 = out2
-    output2 = m2(input2)
-    print(output2.size())
-
-    """
 
 
