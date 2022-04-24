@@ -2,26 +2,12 @@ import torch
 from torch import nn, Tensor
 from torch.nn import TransformerEncoderLayer, TransformerEncoder
 import math
-from prettytable import PrettyTable
-
-def count_parameters(model):
-    table = PrettyTable(["Modules", "Parameters"])
-    total_params = 0
-    for name, parameter in model.named_parameters():
-        if not parameter.requires_grad: continue
-        params = parameter.numel()
-        table.add_row([name, params])
-        total_params += params
-    print(table)
-    print(f"Total Params: {total_params}")
-    return total_params
-
+import memory_profiler
 
 class PositionalEncoding(nn.Module):
     def __init__(self, d_model: int, dropout: float = 0.1, max_len: int = 5000):
         super().__init__()
         self.dropout = nn.Dropout(p=dropout)
-
         position = torch.arange(max_len).unsqueeze(1)
         div_term = torch.exp(torch.arange(0, d_model, 2) * (-math.log(10000.0) / d_model))
         pe = torch.zeros(max_len, 1, d_model)
@@ -33,9 +19,10 @@ class PositionalEncoding(nn.Module):
         x = x + self.pe[:x.size(0)]
         return self.dropout(x)
 
+
 class TransformerModel(nn.Module):
     def __init__(self, d_model: int, nhead: int, d_hid: int,
-                 nlayers: int, num_classes: int, n_channels: int, dropout: float = 0.5 ):
+                 nlayers: int, num_classes: int, n_channels: int, dropout: float = 0.5):
         super().__init__()
         self.model_type = 'Transformer'
         self.pos_encoder = PositionalEncoding(d_model, dropout)
@@ -46,6 +33,7 @@ class TransformerModel(nn.Module):
         self.decoder = nn.Linear(d_model, num_classes)
 
     def forward(self, src: Tensor) -> Tensor:
+
         src = torch.permute(src, (2, 0, 1))
         src = self.encoder(src) * math.sqrt(self.d_model)
         src = self.pos_encoder(src)
@@ -58,15 +46,20 @@ if __name__ == "__main__":
 
     model = TransformerModel(d_model=64, nhead=8, d_hid=128, nlayers=8,
                              num_classes=4, n_channels=1, dropout=0.5)
-    par = count_parameters(model)
 
-    src = torch.randn(4, 1, 1100)
+    print(sum(p.numel() for p in model.parameters()))
+
+    src = torch.randn(10, 1, 1200)
     print(src.size())
-    out = model(src)
+    with torch.no_grad():
+        out = model(src)
     print(out.size())
+    print(memory_profiler.memory_usage())
 
-    src2 = torch.randn(4, 1, 1200)
+    src2 = torch.randn(10, 1, 1400)
     print(src2.size())
-    out2 = model(src2)
+    with torch.no_grad():
+        out2= model(src2)
     print(out2.size())
+    print(memory_profiler.memory_usage())
 
